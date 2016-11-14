@@ -1,0 +1,102 @@
+
+
+
+- hosts: localhost
+  vars:
+    ubuntu_dist: xenial  
+    download_path: /root/Downloads
+  tasks:
+
+   - name: Creating directories
+     file: path={{item.path}} state=directory mode=0755
+     with_items:
+        - { 'path' : '{{download_path}}' }
+
+   - name: Install java 8 (add repo)
+     apt_repository: repo='ppa:webupd8team/java'
+
+   - name: Install java 8 (add auto-confirms to install)
+     shell: echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | sudo /usr/bin/debconf-set-selections
+
+   - name: Install java 8
+     apt: pkg=oracle-java8-installer
+
+   - name: Install python-pip
+     apt: pkg=python-pip state=installed
+
+   - name: Install vim
+     apt: pkg=vim state=installed
+
+   - name: Install git
+     apt: pkg=git state=installed
+
+   - name: Install vlc
+     apt: pkg=vlc state=installed
+
+   - name: Install chrome dependencies
+     apt: pkg={{item}} state=installed
+     with_items:
+       - libindicator7
+       - libpango1.0-0
+       - libappindicator1
+       - libpangox-1.0-0
+
+   - name: Download pycharm
+     get_url:
+       url: https://download.jetbrains.com/python/pycharm-community-2016.2.3.tar.gz
+       dest: '{{download_path}}/pycharm-community-2016.2.3.tar.gz'
+       timeout: 2000
+       force: no
+
+   - name: Unarchive pycharm
+     unarchive: src='{{download_path}}/pycharm-community-2016.2.3.tar.gz' dest=/opt/ remote_src=yes
+
+   - name: Download intellij
+     get_url:
+       url: https://download.jetbrains.com/idea/ideaIC-2016.2.5.tar.gz
+       dest: '{{download_path}}/ideaIC-2016.2.5.tar.gz'
+       timeout: 2000
+       force: no
+
+   - name: Unarchive intellij
+     unarchive: src='{{download_path}}/ideaIC-2016.2.5.tar.gz' dest=/opt/ remote_src=yes
+
+   - name: Adding google key
+     apt_key: url=https://dl-ssl.google.com/linux/linux_signing_key.pub
+     
+   - name: Adding google chrome repository
+     apt_repository: repo='deb http://dl.google.com/linux/chrome/deb/ stable main' state=present filename='google-chrome.list' update_cache=yes
+
+   - name: Install google chrome
+     apt: pkg=google-chrome-stable state=installed
+
+   - name: Adding virtual box key
+     apt_key: url={{item}}
+     with_items:
+        - https://www.virtualbox.org/download/oracle_vbox_2016.asc
+        - https://www.virtualbox.org/download/oracle_vbox.asc     
+
+   - name: Adding virtual box repository
+     apt_repository: repo='deb http://download.virtualbox.org/virtualbox/debian {{ubuntu_dist}} contrib' state=present filename='vbox.list' update_cache=yes
+
+   - name: Install virtual box
+     apt: pkg=virtualbox-5.1 state=installed
+
+   - name: Add spotify key
+     apt_key: id=BBEBDCB318AD50EC6865090613B00F1FD2C19886 keyserver=hkp://keyserver.ubuntu.com:80 state=present
+
+   - name: Add spotify repo
+     apt_repository: repo='deb http://repository.spotify.com stable non-free' state=present filename='spotify.list' update_cache=yes
+
+   - name: Install spotify
+     apt: pkg=spotify-client state=installed
+
+   - name: Download sublime text
+     get_url:
+       url: https://download.sublimetext.com/sublime-text_build-3126_amd64.deb
+       dest: '{{download_path}}/sublime-text_build-3126_amd64.deb'
+       timeout: 2000
+       force: no
+
+   - name: Install sublime text
+     apt: deb='{{download_path}}/sublime-text_build-3126_amd64.deb'
