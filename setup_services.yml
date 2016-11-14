@@ -1,0 +1,104 @@
+
+
+
+
+- hosts: localhost
+  become: true
+  vars:
+    ubuntu_dist: xenial
+    download_path: /root/Downloads
+    services: {
+		'spark' : true,
+		'redis' : true,
+                'elasticsearch' : true,
+                'hadoop' : true,
+                'rabbitmq' : true,
+                'mongodb' : true
+    }
+
+  tasks:
+
+   - name: Creating directories
+     file: path={{item.path}} state=directory mode=0755
+     with_items:
+        - { 'path' : '{{download_path}}' }
+
+
+   - name: Download spark
+     get_url:
+       url: http://d3kbcqa49mib13.cloudfront.net/spark-2.0.1-bin-hadoop2.7.tgz
+       dest: '{{download_path}}/spark-2.0.1-bin-hadoop2.7.tgz'
+       timeout: 2000
+       force: no
+     when: services.spark == true
+
+   - name: Unarchive spark
+     unarchive: src='{{download_path}}/spark-2.0.1-bin-hadoop2.7.tgz' dest=/opt/ remote_src=yes
+     when: services.spark == true
+
+
+   - name: Download redis
+     get_url:
+       url: http://download.redis.io/releases/redis-3.2.5.tar.gz
+       dest: '{{download_path}}/redis-3.2.5.tar.gz'
+       timeout: 2000
+       force: no
+     when: services.redis == true
+
+   - name: Unarchive redis
+     unarchive: src='{{download_path}}/redis-3.2.5.tar.gz' dest=/opt/ remote_src=yes
+     when: services.redis == true
+
+
+   - name: Download elasticsearch
+     get_url:
+       url: https://download.elasticsearch.org/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.2.0/elasticsearch-2.2.0.tar.gz
+       dest: '{{download_path}}/elasticsearch-2.2.0.tar.gz'
+       timeout: 2000
+       force: no
+     when: services.elasticsearch == true
+
+   - name: Unarchive elasticsearch
+     unarchive: src='{{download_path}}/elasticsearch-2.2.0.tar.gz' dest=/opt/ remote_src=yes
+     when: services.elasticsearch == true
+
+
+   - name: Download hadoop
+     get_url:
+       url: http://ftp.unicamp.br/pub/apache/hadoop/common/hadoop-2.7.3/hadoop-2.7.3.tar.gz
+       dest: '{{download_path}}/hadoop-2.7.3.tar.gz'
+       timeout: 2000
+       force: no
+     when: services.hadoop == true
+
+   - name: Unarchive hadoop
+     unarchive: src='{{download_path}}/hadoop-2.7.3.tar.gz' dest=/opt/ remote_src=yes
+     when: services.hadoop == true
+
+
+   - name: Adding rabbitmq key
+     apt_key: url=https://www.rabbitmq.com/rabbitmq-release-signing-key.asc
+     when: services.rabbitmq == true
+
+   - name: Adding rabbitmq repository
+     apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main' state=present filename='rabbitmq.list' update_cache=yes
+     when: services.rabbitmq == true
+
+   - name: Install rabbitmq
+     apt: pkg=rabbitmq-server state=installed
+     when: services.rabbitmq == true
+
+   
+   - name: Add mongodb key
+     apt_key: keyserver=hkp://keyserver.ubuntu.com:80 id=EA312927
+     when: services.mongodb == true
+
+   - name: Adding mongodb repository
+     apt_repository: repo='deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse' state=present filename='mongodb.list' update_cache=yes
+     when: services.mongodb == true
+
+   - name: Install mongodb
+     apt: pkg=mongodb-org state=installed
+     when: services.mongodb == true
+
+   
