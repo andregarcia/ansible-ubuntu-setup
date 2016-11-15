@@ -13,7 +13,8 @@
                 'elasticsearch' : true,
                 'hadoop' : true,
                 'rabbitmq' : true,
-                'mongodb' : true
+                'mongodb' : true,
+                'docker' : true
     }
 
   tasks:
@@ -101,4 +102,40 @@
      apt: pkg=mongodb-org state=installed
      when: services.mongodb == true
 
-   
+
+   - name: Installing docker dependencies
+     apt: pkg={{item}} state=installed
+     with_items:
+        - apt-transport-https 
+        - ca-certificates
+     when: services.docker == true
+
+   - name: Adding docker key
+     apt_key: keyserver='hkp://p80.pool.sks-keyservers.net:80' id=58118E89F3A912897C070ADBF76221572C52609D
+     when: services.docker == true
+
+   - name: Adding docker repo
+     apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-{{ubuntu_dist}} main' state=present filename='docker.list' update_cache=yes
+     when: services.docker == true
+
+   - name: Register uname variable
+     shell: uname -r
+     register: uname_r_res
+     when: services.docker == true
+
+   - name: Set uname fact
+     set_fact: uname_r=uname_r_res.stdout_lines
+
+   - name: Install docker recommended packages
+     apt: pkg={{item}}
+     with_items: 
+        - 'linux-image-extra-{{uname_r_res.stdout}}'
+        - linux-image-extra-virtual
+     when: services.docker == true
+
+   - name: Install docker engine
+     apt: pkg=docker-engine state=installed update_cache=yes
+     when: services.docker == true
+
+
+     
