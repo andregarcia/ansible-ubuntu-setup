@@ -104,4 +104,14 @@
    - name: Install sublime text
      apt: deb='{{download_path}}/sublime-text_build-3126_amd64.deb'
 
+   - name: Download skype
+     get_url:
+       url: https://repo.skype.com/latest/skypeforlinux-64.deb
+       dest: '{{download_path}}/skypeforlinux-64.deb'
+       timeout: 2000
+       force: no
+
+   - name: Install skype
+     apt: deb="{{download_path}}/skypeforlinux-64.deb"
+     sudo: true
 
