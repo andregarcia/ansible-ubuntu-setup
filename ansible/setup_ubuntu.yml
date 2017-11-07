@@ -33,6 +33,9 @@
    - name: Install git
      apt: pkg=git state=installed
 
+   - name: Install maven
+     apt: pkg=maven state=installed
+
    - name: Install vlc
      apt: pkg=vlc state=installed
 
